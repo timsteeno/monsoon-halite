@@ -3,16 +3,8 @@
 
 import hlt
 from hlt import constants
-from hlt.positionals import Direction
-import random
 import logging
-
-
-def get_command(game_map, ship):
-    if game_map[ship.position].halite_amount < constants.MAX_HALITE / 10 or ship.is_full:
-        return ship.move(random.choice([Direction.North, Direction.South, Direction.East, Direction.West]))
-    else:
-        return ship.stay_still()
+import game_info
 
 
 """ <<<Game Begin>>> """
@@ -44,7 +36,7 @@ while True:
 
     # Add a move for each ship
     for ship in me.get_ships():
-        command_queue.append(get_command(game_map, ship))
+        command_queue.append(game_info.get_command(game_map, ship))
 
     # Decide whether to spawn a new ship
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
