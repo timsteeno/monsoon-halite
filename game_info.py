@@ -1,5 +1,4 @@
 from hlt.positionals import Direction
-from hlt import constants
 import logging
 
 def get_command(game_map, ship):
@@ -11,10 +10,17 @@ def get_command(game_map, ship):
 
     for neighboring_position in ship.position.get_surrounding_cardinals():
         halite_amt = game_map[neighboring_position].halite_amount
-        if best_neighbor_position is None or halite_amt > max_halite:
+        is_occupied = game_map[neighboring_position].is_occupied
+
+        if (best_neighbor_position is None or halite_amt > max_halite) and not is_occupied:
             max_halite = halite_amt
             best_neighbor_position = neighboring_position
             best_neighbor_direction = game_map.naive_navigate(ship, best_neighbor_position)
+
+    if best_neighbor_position is None:
+        # We've been trapped? There is no best position after checking all four
+        # For now we'll crash to the right to see if we can free up the situation
+        best_neighbor_direction = Direction.East
 
     logging.info('Max halite nearby: {} direction: {}'.format(
         max_halite, Direction.convert(best_neighbor_direction)))
