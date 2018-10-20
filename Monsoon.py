@@ -40,7 +40,7 @@ while True:
 
     # Add a move for each ship
     for ship in me.get_ships():
-        if (ship.position == shipyard_position):
+        if ship.position == shipyard_position:
             # We made the deposit. Turn off is_depositing and get a new command
             is_depositing[ship.id] = False
 
