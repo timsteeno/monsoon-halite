@@ -1,6 +1,7 @@
 from hlt.positionals import Direction
 from hlt import constants
 import logging
+import random
 
 
 def get_future_ev(current_halite, max_halite):
@@ -26,6 +27,10 @@ def get_command(game_map, ship):
             max_halite = halite_amt
             best_neighbor_position = neighboring_position
             best_neighbor_direction = game_map.naive_navigate(ship, best_neighbor_position)
+
+    if max_halite == 0:
+        # We're surrounded by zero. Pick a random direction for now. We should be smarter about picking targets.
+        best_neighbor_direction = random.choice([Direction.North, Direction.South, Direction.East, Direction.West])
 
     if best_neighbor_position is None:
         # We've been trapped? There is no best position after checking all four
