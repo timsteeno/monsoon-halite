@@ -1,5 +1,15 @@
 from hlt.positionals import Direction
+from hlt import constants
 import logging
+
+
+def get_future_ev(current_halite, max_halite):
+    two_turn_stay_ev = current_halite * 1 / constants.EXTRACT_RATIO
+    two_turn_stay_ev += current_halite * (1 - 1 / constants.EXTRACT_RATIO) * (1 / constants.EXTRACT_RATIO)
+    two_turn_move_ev = max_halite * 1 / constants.EXTRACT_RATIO
+    two_turn_move_ev -= current_halite * 1 / constants.MOVE_COST_RATIO
+    return two_turn_stay_ev, two_turn_move_ev
+
 
 def get_command(game_map, ship):
     # Get the nearest neighbor positions and check their halite amounts
@@ -27,7 +37,9 @@ def get_command(game_map, ship):
     logging.info('Halite storage is at {}'.format(ship.halite_amount))
     logging.info('Current halite at this position: {}'.format(current_halite))
 
-    if (current_halite * .25 + current_halite * (.75 * .25)) > (max_halite * .25 - current_halite * .1):
+    two_turn_stay_ev, two_turn_move_ev = get_future_ev(current_halite, max_halite)
+
+    if two_turn_stay_ev > two_turn_move_ev:
         # Better to stay
         logging.info("I should stay here. EV={} vs {}".format(
             current_halite * .25 + current_halite * (.75 * .25),
