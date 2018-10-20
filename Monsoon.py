@@ -7,12 +7,16 @@ import logging
 import game_info
 
 
-""" <<<Game Begin>>> """
+# INITIALIZE
 
-# This game object contains the initial game state.
 game = hlt.Game()
-# At this point "game" variable is populated with initial map data.
-# This is a good place to do computationally expensive start-up pre-processing.
+shipyard_position = game.me.shipyard.position
+
+# Configure the dict for which bots are headed to shipyard
+is_depositing = {}
+for ship in game.me.get_ships():
+    is_depositing[ship.id] = False
+
 # As soon as you call "ready" function below, the 2 second per turn timer will start.
 game.ready("Monsoon (Potato)")
 
@@ -36,7 +40,19 @@ while True:
 
     # Add a move for each ship
     for ship in me.get_ships():
-        command_queue.append(game_info.get_command(game_map, ship))
+        if (ship.position == shipyard_position):
+            # We made the deposit. Turn off is_depositing and get a new command
+            is_depositing[ship.id] = False
+
+        if ship.halite_amount >= constants.MAX_HALITE*.98:
+            # We're full. Set is_depositing so we'll head back.
+            is_depositing[ship.id] = True
+
+        if is_depositing[ship.id]:
+            # We are depositing but still aren't at the shipyard. Head there.
+            command_queue.append(ship.move(game_map.naive_navigate(ship, shipyard_position)))
+        else:
+            command_queue.append(game_info.get_command(game_map, ship))
 
     # Decide whether to spawn a new ship
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
