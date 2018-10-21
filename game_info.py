@@ -12,13 +12,13 @@ def get_future_ev(current_halite, max_halite):
     return two_turn_stay_ev, two_turn_move_ev
 
 
-def get_command(game_map, ship):
-    # Get the nearest neighbor positions and check their halite amounts
+def get_command(game_map, ship, shipyard):
     best_neighbor_position = None
     best_neighbor_direction = None
     max_halite = 0
     current_halite = game_map[ship.position].halite_amount
 
+    # Get the nearest neighbor positions and check their halite amounts
     for neighboring_position in ship.position.get_surrounding_cardinals():
         halite_amt = game_map[neighboring_position].halite_amount
         is_occupied = game_map[neighboring_position].is_occupied
@@ -30,7 +30,7 @@ def get_command(game_map, ship):
 
     if max_halite == 0:
         # We're surrounded by zero. Pick a random direction for now. We should be smarter about picking targets.
-        best_neighbor_direction = random.choice([Direction.North, Direction.South, Direction.East, Direction.West])
+        best_neighbor_direction = random.choice([Direction.North, Direction.South])
 
     if best_neighbor_position is None:
         # We've been trapped? There is no best position after checking all four

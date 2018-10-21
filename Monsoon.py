@@ -3,7 +3,9 @@
 
 import hlt
 from hlt import constants
+from hlt.positionals import Direction, Position
 import logging
+import random
 import game_info
 
 
@@ -11,6 +13,8 @@ import game_info
 
 game = hlt.Game()
 shipyard_position = game.me.shipyard.position
+shipyard_position_x = shipyard_position.x
+shipyard_position_y = shipyard_position.y
 
 # Configure the dict for which bots are headed to shipyard
 is_depositing = {}
@@ -40,19 +44,34 @@ while True:
 
     # Add a move for each ship
     for ship in me.get_ships():
-        if ship.position == shipyard_position:
-            # We made the deposit. Turn off is_depositing and get a new command
-            is_depositing[ship.id] = False
+        distance_home = game_map.calculate_distance(ship.position, shipyard_position)
+        logging.info("ship id: {}".format(ship.id))
+        logging.info("I'm {} units from home right now.".format(distance_home))
 
-        if ship.halite_amount >= constants.MAX_HALITE*.98:
+        if ship.halite_amount >= constants.MAX_HALITE * .98:
             # We're full. Set is_depositing so we'll head back.
             is_depositing[ship.id] = True
 
-        if is_depositing[ship.id]:
+        if (constants.MAX_TURNS - game.turn_number)  <= distance_home + len(me.get_ships()):
+            # not full but head home anyway, we're going to run out of time.
+            is_depositing[ship.id] = True
+
+        if ship.position == shipyard_position:
+            # We made the deposit. Turn off is_depositing and head out of the shipyard in a safe direction
+            is_depositing[ship.id] = False
+            command_queue.append(ship.move(random.choice([Direction.North, Direction.South])))
+
+        elif is_depositing[ship.id]:
             # We are depositing but still aren't at the shipyard. Head there.
-            command_queue.append(ship.move(game_map.naive_navigate(ship, shipyard_position)))
+            if ship.position.y != shipyard_position_y:
+                # we want to get to (ship.position.x, shipyard_position_y) first
+                desired_position = Position(ship.position.x, shipyard_position_y)
+                command_queue.append(ship.move(game_map.naive_navigate(ship, desired_position)))
+            else: # we are on the row
+                # we want to navigate to shipyard_position
+                command_queue.append(ship.move(game_map.naive_navigate(ship, shipyard_position)))
         else:
-            command_queue.append(game_info.get_command(game_map, ship))
+            command_queue.append(game_info.get_command(game_map, ship, game.me.shipyard))
 
     # Decide whether to spawn a new ship
     if game.turn_number <= 200 and me.halite_amount >= constants.SHIP_COST and not game_map[me.shipyard].is_occupied:
